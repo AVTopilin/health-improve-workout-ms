@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swagger UI Guide - JWT Token Setup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #2c3e50;
+            margin-top: 25px;
+        }
+        .step {
+            background: #ecf0f1;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #2980b9;
+        }
+        .button.danger {
+            background: #e74c3c;
+        }
+        .button.danger:hover {
+            background: #c0392b;
+        }
+        .button.success {
+            background: #27ae60;
+        }
+        .button.success:hover {
+            background: #229954;
+        }
+        .screenshot {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+        }
+        .endpoint-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .endpoint {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 3px;
+            border-left: 3px solid #3498db;
+        }
+        .method {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .get { color: #27ae60; }
+        .post { color: #3498db; }
+        .put { color: #f39c12; }
+        .delete { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Swagger UI Guide - JWT Token Setup</h1>
+        
+        <div class="info">
+            <strong>Цель:</strong> Настроить Swagger UI для работы с JWT токенами из Keycloak
+        </div>
+
+        <h2>📋 Предварительные требования</h2>
+        <div class="step">
+            <ol>
+                <li>✅ Keycloak запущен на http://localhost:8081</li>
+                <li>✅ Backend приложение запущено на http://localhost:8080</li>
+                <li>✅ Настроен realm, client и пользователь в Keycloak</li>
+                <li>✅ Получен JWT токен</li>
+            </ol>
+        </div>
+
+        <h2>🚀 Шаг 1: Открыть Swagger UI</h2>
+        <div class="step">
+            <p>Откройте в браузере:</p>
+            <div class="code">
+                <a href="http://localhost:8080/swagger-ui/index.html" target="_blank" class="button">Открыть Swagger UI</a>
+            </div>
+        </div>
+
+        <h2>🔑 Шаг 2: Авторизация в Swagger UI</h2>
+        <div class="step">
+            <p>В правом верхнем углу Swagger UI найдите кнопку <strong>"Authorize"</strong> (🔒)</p>
+            <p>Нажмите на неё - откроется модальное окно авторизации</p>
+        </div>
+
+        <h2>🎯 Шаг 3: Ввести JWT токен</h2>
+        <div class="step">
+            <p>В поле <strong>"Value"</strong> введите ваш JWT токен в формате:</p>
+            <div class="code">
+                Bearer YOUR_JWT_TOKEN_HERE
+            </div>
+            <p><strong>Важно:</strong> Не забудьте слово "Bearer " перед токеном!</p>
+        </div>
+
+        <h2>💡 Как получить JWT токен</h2>
+        <div class="step">
+            <p>Используйте один из скриптов:</p>
+            <div class="code">
+                # Автоматическое получение токена
+                get-token-simple.bat
+                
+                # Или ручное получение
+                get-token-auto.bat
+            </div>
+        </div>
+
+        <h2>✅ Шаг 4: Сохранить и использовать</h2>
+        <div class="step">
+            <ol>
+                <li>Нажмите <strong>"Authorize"</strong> в модальном окне</li>
+                <li>Закройте модальное окно</li>
+                <li>Теперь все API endpoints будут использовать ваш токен</li>
+            </ol>
+        </div>
+
+        <h2>🧪 Тестирование API с токеном</h2>
+        <div class="endpoint-list">
+            <h3>Доступные endpoints:</h3>
+            
+            <div class="endpoint">
+                <span class="method get">GET</span> <strong>/api/workouts</strong> - Получить все тренировки
+            </div>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span> <strong>/api/workouts</strong> - Создать тренировку
+            </div>
+            
+            <div class="endpoint">
+                <span class="method get">GET</span> <strong>/api/exercises</strong> - Получить все упражнения
+            </div>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span> <strong>/api/exercises</strong> - Создать упражнение
+            </div>
+            
+            <div class="endpoint">
+                <span class="method get">GET</span> <strong>/api/workout-sessions</strong> - Получить сессии тренировок
+            </div>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span> <strong>/api/workout-sessions</strong> - Создать сессию
+            </div>
+        </div>
+
+        <h2>⚠️ Важные замечания</h2>
+        <div class="warning">
+            <ul>
+                <li><strong>Токен имеет срок действия</strong> - обычно 5-15 минут</li>
+                <li><strong>В dev режиме</strong> API работает без токена (permitAll)</li>
+                <li><strong>В prod режиме</strong> токен обязателен для всех endpoints</li>
+                <li><strong>Формат токена:</strong> Bearer + пробел + JWT токен</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Troubleshooting</h2>
+        <div class="step">
+            <h3>Проблема: "401 Unauthorized"</h3>
+            <p><strong>Решение:</strong> Проверьте правильность токена и его срок действия</p>
+            
+            <h3>Проблема: "403 Forbidden"</h3>
+            <p><strong>Решение:</strong> Убедитесь, что у пользователя есть нужные роли в Keycloak</p>
+            
+            <h3>Проблема: Токен не принимается</h3>
+            <p><strong>Решение:</strong> Проверьте формат: "Bearer " + токен</p>
+        </div>
+
+        <h2>📚 Полезные ссылки</h2>
+        <div class="step">
+            <a href="http://localhost:8080/swagger-ui/index.html" target="_blank" class="button">Swagger UI</a>
+            <a href="http://localhost:8080/v3/api-docs" target="_blank" class="button">OpenAPI Spec</a>
+            <a href="http://localhost:8081" target="_blank" class="button">Keycloak Admin</a>
+            <a href="test-api.html" target="_blank" class="button success">API Tester</a>
+        </div>
+
+        <div class="success">
+            <h3>🎉 Готово!</h3>
+            <p>Теперь вы можете тестировать API через Swagger UI с JWT аутентификацией!</p>
+        </div>
+    </div>
+</body>
+</html>

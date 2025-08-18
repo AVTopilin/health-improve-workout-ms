@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout API Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .endpoint { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .response { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; white-space: pre-wrap; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 3px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .token-section { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Workout API Tester</h1>
+    <p>Тестирование API endpoints для workout backend</p>
+    
+    <div class="token-section">
+        <h3>🔑 JWT Token (опционально для dev режима)</h3>
+        <div class="form-group">
+            <label>JWT Token:</label>
+            <input type="text" id="jwtToken" placeholder="Вставьте JWT токен из Keycloak (необязательно в dev режиме)" style="width: 100%;">
+        </div>
+        <div class="info" style="padding: 10px; margin-top: 10px;">
+            <strong>В dev режиме API работает без токена</strong><br>
+            Но с токеном вы можете тестировать полную функциональность аутентификации
+        </div>
+    </div>
+    
+    <div class="endpoint">
+        <h3>1. Проверка основного endpoint</h3>
+        <button onclick="testGet('/')">GET /</button>
+        <div id="response1" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>2. Проверка health endpoint</h3>
+        <button onclick="testGet('/health')">GET /health</button>
+        <div id="response2" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>3. Проверка test endpoint</h3>
+        <button onclick="testGet('/test')">GET /test</button>
+        <div id="response3" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>4. Получение всех тренировок</h3>
+        <button onclick="testGet('/api/workouts')">GET /api/workouts</button>
+        <div id="response4" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>5. Создание тренировки</h3>
+        <div class="form-group">
+            <label>Название:</label>
+            <input type="text" id="workoutName" value="Тестовая тренировка">
+        </div>
+        <div class="form-group">
+            <label>Описание:</label>
+            <textarea id="workoutDescription">Описание тестовой тренировки</textarea>
+        </div>
+        <button onclick="createWorkout()">POST /api/workouts</button>
+        <div id="response5" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>6. Получение упражнений для тренировки</h3>
+        <div class="form-group">
+            <label>ID тренировки:</label>
+            <input type="number" id="workoutId" value="1">
+        </div>
+        <button onclick="testGet('/api/exercises/workout/' + document.getElementById('workoutId').value)">GET /api/exercises/workout/{id}</button>
+        <div id="response6" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>7. Создание упражнения</h3>
+        <div class="form-group">
+            <label>ID тренировки:</label>
+            <input type="number" id="exerciseWorkoutId" value="1">
+        </div>
+        <div class="form-group">
+            <label>Название упражнения:</label>
+            <input type="text" id="exerciseName" value="Жим лежа">
+        </div>
+        <div class="form-group">
+            <label>Подходы:</label>
+            <input type="number" id="exerciseSets" value="3">
+        </div>
+        <div class="form-group">
+            <label>Повторения:</label>
+            <input type="number" id="exerciseReps" value="10">
+        </div>
+        <div class="form-group">
+            <label>Вес (кг):</label>
+            <input type="number" id="exerciseWeight" value="80.0" step="0.5">
+        </div>
+        <div class="form-group">
+            <label>Время отдыха (сек):</label>
+            <input type="number" id="exerciseRestTime" value="120">
+        </div>
+        <div class="form-group">
+            <label>Порядок:</label>
+            <input type="number" id="exerciseOrder" value="1">
+        </div>
+        <button onclick="createExercise()">POST /api/exercises</button>
+        <div id="response7" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>8. Получение расписания</h3>
+        <button onclick="testGet('/api/schedule')">GET /api/schedule</button>
+        <div id="response8" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>9. Получение прогрессий</h3>
+        <div class="form-group">
+            <label>ID упражнения:</label>
+            <input type="number" id="progressionExerciseId" value="1">
+        </div>
+        <button onclick="testGet('/api/progressions?exerciseId=' + document.getElementById('progressionExerciseId').value)">GET /api/progressions?exerciseId={id}</button>
+        <div id="response9" class="response"></div>
+    </div>
+
+    <div class="endpoint">
+        <h3>10. Проверка Swagger UI</h3>
+        <button onclick="window.open('http://localhost:8080/swagger-ui/index.html', '_blank')">Открыть Swagger UI</button>
+        <div class="info" style="padding: 10px; margin-top: 10px;">
+            <strong>Swagger UI должен открыться в новой вкладке</strong><br>
+            Если не открывается, проверьте что приложение запущено и перезапустите его
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <h3>11. Тестирование с JWT токеном</h3>
+        <button onclick="testWithJWT()">GET /api/workouts (с JWT)</button>
+        <div class="warning" style="padding: 10px; margin-top: 10px;">
+            <strong>Этот тест проверяет работу с JWT токеном</strong><br>
+            Сначала получите токен из Keycloak, затем вставьте его в поле выше
+        </div>
+        <div id="response11" class="response"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+
+        function getHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            const token = document.getElementById('jwtToken').value.trim();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        }
+
+        async function testGet(endpoint) {
+            const responseDiv = getResponseDiv(endpoint);
+            responseDiv.className = 'response info';
+            responseDiv.textContent = 'Запрос выполняется...';
+            
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    headers: getHeaders()
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    responseDiv.className = 'response success';
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    responseDiv.className = 'response error';
+                    responseDiv.textContent = `Ошибка ${response.status}: ${response.statusText}`;
+                }
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.textContent = `Ошибка: ${error.message}`;
+            }
+        }
+
+        async function createWorkout() {
+            const workoutData = {
+                name: document.getElementById('workoutName').value,
+                description: document.getElementById('workoutDescription').value
+            };
+
+            const responseDiv = document.getElementById('response5');
+            responseDiv.className = 'response info';
+            responseDiv.textContent = 'Создание тренировки...';
+
+            try {
+                const response = await fetch(API_BASE + '/api/workouts', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(workoutData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    responseDiv.className = 'response success';
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    responseDiv.className = 'response error';
+                    responseDiv.textContent = `Ошибка ${response.status}: ${response.statusText}`;
+                }
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.textContent = `Ошибка: ${error.message}`;
+            }
+        }
+
+        async function createExercise() {
+            const exerciseData = {
+                workoutId: parseInt(document.getElementById('exerciseWorkoutId').value),
+                name: document.getElementById('exerciseName').value,
+                sets: parseInt(document.getElementById('exerciseSets').value),
+                reps: parseInt(document.getElementById('exerciseReps').value),
+                weight: parseFloat(document.getElementById('exerciseWeight').value),
+                restTime: parseInt(document.getElementById('exerciseRestTime').value),
+                exerciseOrder: parseInt(document.getElementById('exerciseOrder').value),
+                notes: 'Тестовое упражнение'
+            };
+
+            const responseDiv = document.getElementById('response7');
+            responseDiv.className = 'response info';
+            responseDiv.textContent = 'Создание упражнения...';
+
+            try {
+                const response = await fetch(API_BASE + '/api/exercises', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(exerciseData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    responseDiv.className = 'response success';
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    responseDiv.className = 'response error';
+                    responseDiv.textContent = `Ошибка ${response.status}: ${response.statusText}`;
+                }
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.textContent = `Ошибка: ${error.message}`;
+            }
+        }
+
+        async function testWithJWT() {
+            const responseDiv = document.getElementById('response11');
+            const token = document.getElementById('jwtToken').value.trim();
+            
+            if (!token) {
+                responseDiv.className = 'response warning';
+                responseDiv.textContent = 'Сначала вставьте JWT токен в поле выше!';
+                return;
+            }
+
+            responseDiv.className = 'response info';
+            responseDiv.textContent = 'Тестирование с JWT токеном...';
+
+            try {
+                const response = await fetch(API_BASE + '/api/workouts', {
+                    headers: getHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    responseDiv.className = 'response success';
+                    responseDiv.textContent = `✅ JWT токен работает!\n\nОтвет:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    responseDiv.className = 'response error';
+                    responseDiv.textContent = `❌ Ошибка с JWT токеном: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.textContent = `❌ Ошибка: ${error.message}`;
+            }
+        }
+
+        function getResponseDiv(endpoint) {
+            const endpointNumber = endpoint.replace(/\//g, '').replace(/api/g, '') || 'root';
+            const responseDiv = document.getElementById('response' + endpointNumber.replace(/\D/g, ''));
+            return responseDiv || document.getElementById('response1');
+        }
+    </script>
+</body>
+</html>
