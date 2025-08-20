@@ -24,11 +24,16 @@ public class ProgressionController extends BaseController {
     }
     
     @GetMapping
-    public ResponseEntity<List<ProgressionDto>> getProgressions(@RequestParam Long exerciseId, 
+    public ResponseEntity<List<ProgressionDto>> getProgressions(@RequestParam(value = "exerciseId", required = false) Long exerciseId, 
                                                               @AuthenticationPrincipal Jwt jwt) {
         User user = getCurrentUser(jwt);
-        // TODO: Добавить проверку доступа к упражнению
-        List<ProgressionDto> progressions = progressionService.getProgressionsByExerciseId(exerciseId);
+        List<ProgressionDto> progressions;
+        if (exerciseId != null) {
+            // TODO: Добавить проверку доступа к упражнению
+            progressions = progressionService.getProgressionsByExerciseId(exerciseId);
+        } else {
+            progressions = progressionService.getProgressionsForUser(user.getId());
+        }
         return ResponseEntity.ok(progressions);
     }
     

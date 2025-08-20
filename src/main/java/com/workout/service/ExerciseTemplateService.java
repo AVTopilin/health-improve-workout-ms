@@ -2,13 +2,13 @@ package com.workout.service;
 
 import com.workout.dto.ExerciseTemplateDto;
 import com.workout.entity.ExerciseTemplate;
+import com.workout.entity.ExerciseTemplate.DifficultyLevel;
 import com.workout.entity.MuscleGroup;
 import com.workout.entity.Equipment;
-import com.workout.entity.ExerciseTemplate.DifficultyLevel;
 import com.workout.repository.ExerciseTemplateRepository;
 import com.workout.repository.MuscleGroupRepository;
 import com.workout.repository.EquipmentRepository;
-import com.workout.service.MinioService;
+import com.workout.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ public class ExerciseTemplateService {
     @Transactional(readOnly = true)
     public ExerciseTemplateDto getTemplateById(Long id) {
         ExerciseTemplate template = exerciseTemplateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Шаблон упражнения не найден с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Шаблон упражнения не найден с ID: " + id));
         return convertToDto(template);
     }
     
@@ -113,7 +113,7 @@ public class ExerciseTemplateService {
      */
     public ExerciseTemplateDto updateTemplate(Long id, ExerciseTemplateDto dto) {
         ExerciseTemplate existing = exerciseTemplateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Шаблон упражнения не найден с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Шаблон упражнения не найден с ID: " + id));
         
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
@@ -123,13 +123,13 @@ public class ExerciseTemplateService {
         
         if (dto.getMuscleGroupId() != null) {
             MuscleGroup muscleGroup = muscleGroupRepository.findById(dto.getMuscleGroupId())
-                    .orElseThrow(() -> new RuntimeException("Группа мышц не найдена с ID: " + dto.getMuscleGroupId()));
+                    .orElseThrow(() -> new NotFoundException("Группа мышц не найдена с ID: " + dto.getMuscleGroupId()));
             existing.setMuscleGroup(muscleGroup);
         }
         
         if (dto.getEquipmentId() != null) {
             Equipment equipment = equipmentRepository.findById(dto.getEquipmentId())
-                    .orElseThrow(() -> new RuntimeException("Оборудование не найдено с ID: " + dto.getEquipmentId()));
+                    .orElseThrow(() -> new NotFoundException("Оборудование не найдено с ID: " + dto.getEquipmentId()));
             existing.setEquipment(equipment);
         }
         
@@ -144,7 +144,7 @@ public class ExerciseTemplateService {
      */
     public void deactivateTemplate(Long id) {
         ExerciseTemplate template = exerciseTemplateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Шаблон упражнения не найден с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Шаблон упражнения не найден с ID: " + id));
         
         template.setIsActive(false);
         template.setUpdatedAt(LocalDateTime.now());
@@ -156,7 +156,7 @@ public class ExerciseTemplateService {
      */
     public ExerciseTemplateDto activateTemplate(Long id) {
         ExerciseTemplate template = exerciseTemplateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Шаблон упражнения не найден с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Шаблон упражнения не найден с ID: " + id));
         
         template.setIsActive(true);
         template.setUpdatedAt(LocalDateTime.now());
@@ -170,7 +170,7 @@ public class ExerciseTemplateService {
      */
     public ExerciseTemplateDto uploadMedia(Long templateId, MultipartFile file, String mediaType, boolean isPrimary) {
         ExerciseTemplate template = exerciseTemplateRepository.findById(templateId)
-                .orElseThrow(() -> new RuntimeException("Шаблон упражнения не найден с ID: " + templateId));
+                .orElseThrow(() -> new NotFoundException("Шаблон упражнения не найден с ID: " + templateId));
         
         // Здесь должна быть логика загрузки медиа файла через MinioService
         // Пока возвращаем обновленный шаблон
@@ -185,7 +185,7 @@ public class ExerciseTemplateService {
      */
     public void deleteMedia(Long templateId, Long mediaId) {
         ExerciseTemplate template = exerciseTemplateRepository.findById(templateId)
-                .orElseThrow(() -> new RuntimeException("Шаблон упражнения не найден с ID: " + templateId));
+                .orElseThrow(() -> new NotFoundException("Шаблон упражнения не найден с ID: " + templateId));
         
         // Здесь должна быть логика удаления медиа файла
         template.setUpdatedAt(LocalDateTime.now());
@@ -233,13 +233,13 @@ public class ExerciseTemplateService {
         
         if (dto.getMuscleGroupId() != null) {
             MuscleGroup muscleGroup = muscleGroupRepository.findById(dto.getMuscleGroupId())
-                    .orElseThrow(() -> new RuntimeException("Группа мышц не найдена с ID: " + dto.getMuscleGroupId()));
+                    .orElseThrow(() -> new NotFoundException("Группа мышц не найдена с ID: " + dto.getMuscleGroupId()));
             template.setMuscleGroup(muscleGroup);
         }
         
         if (dto.getEquipmentId() != null) {
             Equipment equipment = equipmentRepository.findById(dto.getEquipmentId())
-                    .orElseThrow(() -> new RuntimeException("Оборудование не найдено с ID: " + dto.getEquipmentId()));
+                    .orElseThrow(() -> new NotFoundException("Оборудование не найдено с ID: " + dto.getEquipmentId()));
             template.setEquipment(equipment);
         }
         

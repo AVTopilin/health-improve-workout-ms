@@ -32,6 +32,7 @@ docker-compose stop backend
 echo [OK] Backend service stopped
 echo.
 echo 3. Rebuilding Docker image and starting backend...
+docker-compose build --no-cache --pull backend
 docker-compose up -d --build backend
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to rebuild and start backend

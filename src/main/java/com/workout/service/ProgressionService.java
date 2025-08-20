@@ -3,6 +3,7 @@ package com.workout.service;
 import com.workout.dto.ProgressionDto;
 import com.workout.entity.Exercise;
 import com.workout.entity.Progression;
+import com.workout.exception.NotFoundException;
 import com.workout.repository.ExerciseRepository;
 import com.workout.repository.ProgressionRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,16 +40,27 @@ public class ProgressionService {
     }
     
     /**
+     * Получить все прогрессии пользователя
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<ProgressionDto> getProgressionsForUser(Long userId) {
+        return progressionRepository.findByUser_IdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::convertToDto)
+                .collect(java.util.stream.Collectors.toList());
+    }
+    
+    /**
      * Создать прогрессию для упражнения
      */
     public ProgressionDto createProgression(ProgressionDto progressionDto) {
-        // В DTO приходит exerciseTemplateId по предыдущим версиям; для текущей модели нужна привязка к Exercise
-        // Ожидаем, что в progressionDto передают ID упражнения (в рамках Workout), не шаблона
-        Exercise exercise = exerciseRepository.findById(progressionDto.getExerciseTemplateId())
-                .orElseThrow(() -> new RuntimeException("Exercise not found"));
+        // Используем exerciseId для связи с конкретным упражнением в тренировке
+        Exercise exercise = exerciseRepository.findById(progressionDto.getExerciseId())
+                .orElseThrow(() -> new NotFoundException("Exercise not found"));
         
         Progression progression = new Progression();
         progression.setExercise(exercise);
+        progression.setUser(exercise.getWorkout().getUser());
         progression.setWeightProgressionEnabled(progressionDto.getWeightProgressionEnabled());
         progression.setRepsProgressionEnabled(progressionDto.getRepsProgressionEnabled());
         progression.setSetsProgressionEnabled(progressionDto.getSetsProgressionEnabled());
@@ -79,7 +91,7 @@ public class ProgressionService {
      */
     public ProgressionDto updateProgression(Long id, ProgressionDto progressionDto) {
         Progression progression = progressionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Progression not found"));
+                .orElseThrow(() -> new NotFoundException("Progression not found"));
         
         progression.setWeightProgressionEnabled(progressionDto.getWeightProgressionEnabled());
         progression.setRepsProgressionEnabled(progressionDto.getRepsProgressionEnabled());
@@ -118,7 +130,7 @@ public class ProgressionService {
      */
     public ProgressionDto activateProgression(Long id) {
         Progression progression = progressionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Progression not found"));
+                .orElseThrow(() -> new NotFoundException("Progression not found"));
         progression.setIsActive(true);
         Progression saved = progressionRepository.save(progression);
         return convertToDto(saved);
@@ -129,7 +141,7 @@ public class ProgressionService {
      */
     public ProgressionDto deactivateProgression(Long id) {
         Progression progression = progressionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Progression not found"));
+                .orElseThrow(() -> new NotFoundException("Progression not found"));
         progression.setIsActive(false);
         Progression saved = progressionRepository.save(progression);
         return convertToDto(saved);
@@ -141,26 +153,42 @@ public class ProgressionService {
     private ProgressionDto convertToDto(Progression progression) {
         ProgressionDto dto = new ProgressionDto();
         dto.setId(progression.getId());
+        dto.setExerciseId(progression.getExercise().getId());
+        dto.setUserId(progression.getUser().getId());
         dto.setExerciseTemplateId(progression.getExercise().getExerciseTemplate().getId());
+        
+        // Опции прогрессии
         dto.setWeightProgressionEnabled(progression.getWeightProgressionEnabled());
         dto.setRepsProgressionEnabled(progression.getRepsProgressionEnabled());
         dto.setSetsProgressionEnabled(progression.getSetsProgressionEnabled());
+        
+        // Периодичность
         dto.setWeightPeriodicity(progression.getWeightPeriodicity());
         dto.setRepsPeriodicity(progression.getRepsPeriodicity());
         dto.setSetsPeriodicity(progression.getSetsPeriodicity());
+        
+        // Типы инкрементов
         dto.setWeightIncrementType(progression.getWeightIncrementType());
         dto.setRepsIncrementType(progression.getRepsIncrementType());
         dto.setSetsIncrementType(progression.getSetsIncrementType());
+        
+        // Значения инкрементов
         dto.setWeightIncrementValue(progression.getWeightIncrementValue());
         dto.setRepsIncrementValue(progression.getRepsIncrementValue());
         dto.setSetsIncrementValue(progression.getSetsIncrementValue());
+        
+        // Начальные и конечные значения
         dto.setRepsInitialValue(progression.getRepsInitialValue());
         dto.setRepsFinalValue(progression.getRepsFinalValue());
         dto.setSetsInitialValue(progression.getSetsInitialValue());
         dto.setSetsFinalValue(progression.getSetsFinalValue());
+        
+        // Условия
         dto.setWeightConditionSets(progression.getWeightConditionSets());
         dto.setWeightConditionReps(progression.getWeightConditionReps());
         dto.setSetsConditionReps(progression.getSetsConditionReps());
+        
+        // Статус
         dto.setIsActive(progression.getIsActive());
         
         // Дополнительная информация

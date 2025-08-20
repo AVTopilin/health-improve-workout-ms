@@ -4,6 +4,7 @@ import com.workout.dto.EquipmentDto;
 import com.workout.entity.Equipment;
 import com.workout.entity.Equipment.EquipmentType;
 import com.workout.repository.EquipmentRepository;
+import com.workout.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,7 @@ public class EquipmentService {
     @Transactional(readOnly = true)
     public EquipmentDto getEquipmentById(Long id) {
         Equipment equipment = equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Оборудование не найдено с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Оборудование не найдено с ID: " + id));
         return convertToDto(equipment);
     }
     
@@ -81,7 +82,7 @@ public class EquipmentService {
      */
     public EquipmentDto updateEquipment(Long id, EquipmentDto dto) {
         Equipment existing = equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Оборудование не найдено с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Оборудование не найдено с ID: " + id));
         
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
@@ -97,7 +98,7 @@ public class EquipmentService {
      */
     public void deactivateEquipment(Long id) {
         Equipment equipment = equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Оборудование не найдено с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Оборудование не найдено с ID: " + id));
         
         equipment.setIsActive(false);
         equipment.setUpdatedAt(LocalDateTime.now());
@@ -109,7 +110,7 @@ public class EquipmentService {
      */
     public EquipmentDto activateEquipment(Long id) {
         Equipment equipment = equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Оборудование не найдено с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Оборудование не найдено с ID: " + id));
         
         equipment.setIsActive(true);
         equipment.setUpdatedAt(LocalDateTime.now());
@@ -126,7 +127,8 @@ public class EquipmentService {
         dto.setId(equipment.getId());
         dto.setName(equipment.getName());
         dto.setDescription(equipment.getDescription());
-        dto.setType(equipment.getType().name());
+        dto.setType(equipment.getType() != null ? equipment.getType().name() : null);
+        dto.setIsActive(equipment.getIsActive());
         dto.setExerciseTemplateCount(equipment.getExerciseTemplates() != null ? 
                 (long) equipment.getExerciseTemplates().size() : 0L);
         return dto;
@@ -139,7 +141,12 @@ public class EquipmentService {
         Equipment equipment = new Equipment();
         equipment.setName(dto.getName());
         equipment.setDescription(dto.getDescription());
-        equipment.setType(EquipmentType.valueOf(dto.getType().toUpperCase()));
+        if (dto.getType() != null) {
+            equipment.setType(EquipmentType.valueOf(dto.getType().toUpperCase()));
+        }
+        if (dto.getIsActive() != null) {
+            equipment.setIsActive(dto.getIsActive());
+        }
         return equipment;
     }
 }

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: minio
+description: MinIO object storage for workout backend
+type: application
+version: 0.1.0
+appVersion: "RELEASE.2024-01-16T16-07-38Z"
+keywords:
+  - minio
+  - object-storage
+  - s3
+home: https://min.io/
+sources:
+  - https://github.com/minio/minio
+maintainers:
+  - name: Your Name
+    email: your.email@example.com

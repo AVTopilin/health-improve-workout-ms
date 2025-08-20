@@ -8,7 +8,10 @@ import com.workout.entity.Workout;
 import com.workout.repository.ExerciseRepository;
 import com.workout.repository.ExerciseTemplateRepository;
 import com.workout.repository.WorkoutRepository;
+import com.workout.repository.ProgressionRepository;
 import com.workout.service.UserService;
+import com.workout.exception.NotFoundException;
+import com.workout.exception.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.workout.dto.ProgressionDto;
+import com.workout.entity.Progression;
 
 @RestController
 @RequestMapping("/api/exercises")
@@ -25,13 +30,41 @@ public class ExerciseController extends BaseController {
     private final ExerciseRepository exerciseRepository;
     private final WorkoutRepository workoutRepository;
     private final ExerciseTemplateRepository exerciseTemplateRepository;
+    private final ProgressionRepository progressionRepository;
     
     public ExerciseController(ExerciseRepository exerciseRepository, WorkoutRepository workoutRepository, 
-                           ExerciseTemplateRepository exerciseTemplateRepository, UserService userService) {
+                           ExerciseTemplateRepository exerciseTemplateRepository, 
+                           ProgressionRepository progressionRepository, UserService userService) {
         super(userService);
         this.exerciseRepository = exerciseRepository;
         this.workoutRepository = workoutRepository;
         this.exerciseTemplateRepository = exerciseTemplateRepository;
+        this.progressionRepository = progressionRepository;
+    }
+    
+    /**
+     * Получить упражнения. Если передан workoutId, вернуть упражнения этой тренировки,
+     * иначе вернуть все упражнения пользователя, отсортированные по порядку внутри тренировок.
+     */
+    @GetMapping
+    public ResponseEntity<List<ExerciseDto>> getExercises(
+            @RequestParam(value = "workoutId", required = false) Long workoutId,
+            @AuthenticationPrincipal Jwt jwt) {
+        User user = getCurrentUser(jwt);
+        List<Exercise> exercises;
+        if (workoutId != null) {
+            exercises = exerciseRepository.findByWorkoutIdOrderByExerciseOrder(workoutId);
+        } else {
+            // Собираем все упражнения по всем тренировкам пользователя
+            List<Workout> workouts = workoutRepository.findByUserId(user.getId());
+            exercises = workouts.stream()
+                    .flatMap(w -> exerciseRepository.findByWorkoutIdOrderByExerciseOrder(w.getId()).stream())
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        List<ExerciseDto> exerciseDtos = exercises.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(exerciseDtos);
     }
     
     @GetMapping("/workout/{workoutId}")
@@ -41,10 +74,10 @@ public class ExerciseController extends BaseController {
         
         // Проверяем доступ к тренировке
         Workout workout = workoutRepository.findById(workoutId)
-                .orElseThrow(() -> new RuntimeException("Workout not found"));
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
         
         if (!workout.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         List<Exercise> exercises = exerciseRepository.findByWorkoutIdOrderByExerciseOrder(workoutId);
@@ -55,6 +88,24 @@ public class ExerciseController extends BaseController {
         return ResponseEntity.ok(exerciseDtos);
     }
     
+    /**
+     * Получить упражнение по ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ExerciseDto> getExerciseById(@PathVariable Long id,
+                                                      @AuthenticationPrincipal Jwt jwt) {
+        User user = getCurrentUser(jwt);
+        
+        Exercise exercise = exerciseRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Exercise not found"));
+        
+        if (!exercise.getWorkout().getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+        
+        return ResponseEntity.ok(convertToDto(exercise));
+    }
+    
     @PostMapping
     public ResponseEntity<ExerciseDto> createExercise(@Valid @RequestBody ExerciseDto exerciseDto,
                                                      @AuthenticationPrincipal Jwt jwt) {
@@ -62,10 +113,10 @@ public class ExerciseController extends BaseController {
         
         // Проверяем доступ к тренировке
         Workout workout = workoutRepository.findById(exerciseDto.getWorkoutId())
-                .orElseThrow(() -> new RuntimeException("Workout not found"));
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
         
         if (!workout.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         // Если порядок не указан, определяем автоматически
@@ -87,10 +138,10 @@ public class ExerciseController extends BaseController {
         User user = getCurrentUser(jwt);
         
         Exercise exercise = exerciseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exercise not found"));
+                .orElseThrow(() -> new NotFoundException("Exercise not found"));
         
         if (!exercise.getWorkout().getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         // Обновляем только параметры упражнения, шаблон остается тем же
@@ -110,10 +161,10 @@ public class ExerciseController extends BaseController {
         User user = getCurrentUser(jwt);
         
         Exercise exercise = exerciseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exercise not found"));
+                .orElseThrow(() -> new NotFoundException("Exercise not found"));
         
         if (!exercise.getWorkout().getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         Long workoutId = exercise.getWorkout().getId();
@@ -134,10 +185,10 @@ public class ExerciseController extends BaseController {
         User user = getCurrentUser(jwt);
         
         Exercise exercise = exerciseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Exercise not found"));
+                .orElseThrow(() -> new NotFoundException("Exercise not found"));
         
         if (!exercise.getWorkout().getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         Long workoutId = exercise.getWorkout().getId();
@@ -190,6 +241,64 @@ public class ExerciseController extends BaseController {
         dto.setRestTime(exercise.getRestTime());
         dto.setExerciseOrder(exercise.getExerciseOrder());
         dto.setNotes(exercise.getNotes());
+        
+        // Добавляем прогрессию как вложенный объект
+        try {
+            var progression = progressionRepository.findByExercise_Id(exercise.getId());
+            if (progression.isPresent()) {
+                dto.setProgression(convertProgressionToDto(progression.get()));
+            }
+        } catch (Exception e) {
+            // Если прогрессия не найдена, оставляем null
+            // Это нормально - не все упражнения имеют прогрессию
+        }
+        
+        return dto;
+    }
+    
+    private ProgressionDto convertProgressionToDto(Progression progression) {
+        ProgressionDto dto = new ProgressionDto();
+        dto.setId(progression.getId());
+        dto.setExerciseId(progression.getExercise().getId());
+        dto.setUserId(progression.getUser().getId());
+        
+        // Для совместимости
+        dto.setExerciseTemplateId(progression.getExercise().getExerciseTemplate().getId());
+        
+        // Опции прогрессии
+        dto.setWeightProgressionEnabled(progression.getWeightProgressionEnabled());
+        dto.setRepsProgressionEnabled(progression.getRepsProgressionEnabled());
+        dto.setSetsProgressionEnabled(progression.getSetsProgressionEnabled());
+        
+        // Периодичность - используем enum напрямую
+        dto.setWeightPeriodicity(progression.getWeightPeriodicity());
+        dto.setRepsPeriodicity(progression.getRepsPeriodicity());
+        dto.setSetsPeriodicity(progression.getSetsPeriodicity());
+        
+        // Типы инкрементов - используем enum напрямую
+        dto.setWeightIncrementType(progression.getWeightIncrementType());
+        dto.setRepsIncrementType(progression.getRepsIncrementType());
+        dto.setSetsIncrementType(progression.getSetsIncrementType());
+        
+        // Значения инкрементов
+        dto.setWeightIncrementValue(progression.getWeightIncrementValue());
+        dto.setRepsIncrementValue(progression.getRepsIncrementValue());
+        dto.setSetsIncrementValue(progression.getSetsIncrementValue());
+        
+        // Начальные и конечные значения
+        dto.setRepsInitialValue(progression.getRepsInitialValue());
+        dto.setRepsFinalValue(progression.getRepsFinalValue());
+        dto.setSetsInitialValue(progression.getSetsInitialValue());
+        dto.setSetsFinalValue(progression.getSetsFinalValue());
+        
+        // Условия
+        dto.setWeightConditionSets(progression.getWeightConditionSets());
+        dto.setWeightConditionReps(progression.getWeightConditionReps());
+        dto.setSetsConditionReps(progression.getSetsConditionReps());
+        
+        // Статус
+        dto.setIsActive(progression.getIsActive());
+        
         return dto;
     }
     
@@ -199,7 +308,7 @@ public class ExerciseController extends BaseController {
         
         // Получаем шаблон упражнения
         ExerciseTemplate template = exerciseTemplateRepository.findById(dto.getExerciseTemplateId())
-                .orElseThrow(() -> new RuntimeException("Exercise template not found"));
+                .orElseThrow(() -> new NotFoundException("Exercise template not found"));
         exercise.setExerciseTemplate(template);
         
         exercise.setSets(dto.getSets());

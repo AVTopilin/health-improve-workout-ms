@@ -1,0 +1,36 @@
+# PostgreSQL configuration
+image:
+  repository: postgres
+  tag: "15.0"
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+service:
+  type: ClusterIP
+  port: 5432
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+env:
+  POSTGRES_DB: workout_db
+  POSTGRES_USER: workout_user
+  POSTGRES_PASSWORD: workout_password
+
+securityContext:
+  runAsUser: 999
+  fsGroup: 999
+
+volumePermissions:
+  enabled: true
+  securityContext:
+    runAsUser: 0

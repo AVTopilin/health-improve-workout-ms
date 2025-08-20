@@ -16,7 +16,13 @@ import java.util.List;
 public class ProgressionDto {
     private Long id;
     
-    @NotNull(message = "Exercise template ID is required")
+    @NotNull(message = "Exercise ID is required")
+    private Long exerciseId;
+    
+    @NotNull(message = "User ID is required")
+    private Long userId;
+    
+    // Для совместимости с существующими сервисами
     private Long exerciseTemplateId;
     
     // Опции прогрессии (чекбоксы)
@@ -72,7 +78,7 @@ public class ProgressionDto {
     @Min(value = 1, message = "Sets condition reps must be at least 1")
     private Integer setsConditionReps;
     
-    // Параметры прогрессии
+    // Параметры прогрессии (для совместимости)
     @NotNull(message = "Weeks count is required")
     @Min(value = 1, message = "Weeks count must be at least 1")
     private Integer weeksCount;
@@ -80,9 +86,10 @@ public class ProgressionDto {
     @NotNull(message = "Start date is required")
     private LocalDate startDate;
     
+    // Статус активности
     private Boolean isActive = true;
     
-    // Дополнительная информация
+    // Дополнительная информация (для совместимости)
     private String exerciseTemplateName;
     private String muscleGroupName;
     private String equipmentName;
@@ -90,23 +97,13 @@ public class ProgressionDto {
     // Созданные тренировки (для отображения в интерфейсе)
     private List<WorkoutSummaryDto> createdWorkouts;
     
-    // Перечисления берутся из сущности Progression
-    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class WorkoutSummaryDto {
-        private Long workoutId;
-        private Integer weekNumber;
+        private Long id;
+        private String name;
         private LocalDate workoutDate;
-        private String dayOfWeek;
-        private String status; // "NOT_CREATED", "IN_PROGRESS", "COMPLETED", "SKIPPED"
-        private Boolean isEditable;
-        
-        // Плановые значения для этой недели
-        private Float plannedWeight;
-        private Integer plannedReps;
-        private Integer plannedSets;
-        private Integer plannedRestTime;
+        private String status;
     }
 }

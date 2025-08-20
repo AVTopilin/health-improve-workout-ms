@@ -3,6 +3,7 @@ package com.workout.service;
 import com.workout.dto.MuscleGroupDto;
 import com.workout.entity.MuscleGroup;
 import com.workout.repository.MuscleGroupRepository;
+import com.workout.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ public class MuscleGroupService {
     @Transactional(readOnly = true)
     public MuscleGroupDto getMuscleGroupById(Long id) {
         MuscleGroup muscleGroup = muscleGroupRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Группа мышц не найдена с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Группа мышц не найдена с ID: " + id));
         return convertToDto(muscleGroup);
     }
     
@@ -68,7 +69,7 @@ public class MuscleGroupService {
      */
     public MuscleGroupDto updateMuscleGroup(Long id, MuscleGroupDto dto) {
         MuscleGroup existing = muscleGroupRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Группа мышц не найдена с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Группа мышц не найдена с ID: " + id));
         
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
@@ -84,7 +85,7 @@ public class MuscleGroupService {
      */
     public void deactivateMuscleGroup(Long id) {
         MuscleGroup muscleGroup = muscleGroupRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Группа мышц не найдена с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Группа мышц не найдена с ID: " + id));
         
         muscleGroup.setIsActive(false);
         muscleGroup.setUpdatedAt(LocalDateTime.now());
@@ -96,7 +97,7 @@ public class MuscleGroupService {
      */
     public MuscleGroupDto activateMuscleGroup(Long id) {
         MuscleGroup muscleGroup = muscleGroupRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Группа мышц не найдена с ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Группа мышц не найдена с ID: " + id));
         
         muscleGroup.setIsActive(true);
         muscleGroup.setUpdatedAt(LocalDateTime.now());
@@ -114,6 +115,7 @@ public class MuscleGroupService {
         dto.setName(muscleGroup.getName());
         dto.setDescription(muscleGroup.getDescription());
         dto.setColorCode(muscleGroup.getColorCode());
+        dto.setIsActive(muscleGroup.getIsActive());
         dto.setExerciseTemplateCount(muscleGroup.getExerciseTemplates() != null ? 
                 (long) muscleGroup.getExerciseTemplates().size() : 0L);
         return dto;
@@ -127,6 +129,9 @@ public class MuscleGroupService {
         muscleGroup.setName(dto.getName());
         muscleGroup.setDescription(dto.getDescription());
         muscleGroup.setColorCode(dto.getColorCode());
+        if (dto.getIsActive() != null) {
+            muscleGroup.setIsActive(dto.getIsActive());
+        }
         return muscleGroup;
     }
 }

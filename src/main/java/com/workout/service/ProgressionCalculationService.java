@@ -5,6 +5,8 @@ import com.workout.entity.ExerciseTemplate;
 import com.workout.entity.Progression;
 import com.workout.entity.Workout;
 import com.workout.entity.Exercise;
+import com.workout.entity.Progression.PeriodicityType;
+import com.workout.entity.Progression.IncrementType;
 import com.workout.repository.ExerciseTemplateRepository;
 import com.workout.repository.WorkoutRepository;
 import lombok.RequiredArgsConstructor;
@@ -121,7 +123,7 @@ public class ProgressionCalculationService {
                     progression.getWeightIncrementValue() : currentWeight;
                     
             case EVERY_WORKOUT:
-                if (progression.getWeightIncrementType() == Progression.IncrementType.INCREMENT) {
+                if (progression.getWeightIncrementType() == IncrementType.INCREMENT) {
                     return currentWeight + (progression.getWeightIncrementValue() * (week - 1));
                 }
                 break;
@@ -153,9 +155,9 @@ public class ProgressionCalculationService {
                     progression.getRepsIncrementValue() : currentReps;
                     
             case EVERY_WORKOUT:
-                if (progression.getRepsIncrementType() == Progression.IncrementType.INCREMENT) {
+                if (progression.getRepsIncrementType() == IncrementType.INCREMENT) {
                     return currentReps + (progression.getRepsIncrementValue() * (week - 1));
-                } else if (progression.getRepsIncrementType() == Progression.IncrementType.CYCLE) {
+                } else if (progression.getRepsIncrementType() == IncrementType.CYCLE) {
                     return calculateCycleValue(
                         progression.getRepsInitialValue(),
                         progression.getRepsFinalValue(),
@@ -190,9 +192,9 @@ public class ProgressionCalculationService {
                     progression.getSetsIncrementValue() : currentSets;
                     
             case EVERY_WORKOUT:
-                if (progression.getSetsIncrementType() == Progression.IncrementType.INCREMENT) {
+                if (progression.getSetsIncrementType() == IncrementType.INCREMENT) {
                     return currentSets + (progression.getSetsIncrementValue() * (week - 1));
-                } else if (progression.getSetsIncrementType() == Progression.IncrementType.CYCLE) {
+                } else if (progression.getSetsIncrementType() == IncrementType.CYCLE) {
                     return calculateCycleValue(
                         progression.getSetsInitialValue(),
                         progression.getSetsFinalValue(),

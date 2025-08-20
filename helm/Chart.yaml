@@ -1,0 +1,16 @@
+apiVersion: v2
+name: workout-backend
+description: A Helm chart for Workout Backend Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - workout
+  - fitness
+  - spring-boot
+home: https://github.com/your-org/workout-backend
+sources:
+  - https://github.com/your-org/workout-backend
+maintainers:
+  - name: Your Name
+    email: your.email@example.com

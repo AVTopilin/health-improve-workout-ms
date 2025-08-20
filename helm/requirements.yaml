@@ -1,0 +1,13 @@
+dependencies:
+  - name: postgresql
+    version: 0.1.0
+    repository: "file://charts/postgresql"
+    condition: postgresql.enabled
+  - name: minio
+    version: 0.1.0
+    repository: "file://charts/minio"
+    condition: minio.enabled
+  - name: keycloak
+    version: 0.1.0
+    repository: "file://charts/keycloak"
+    condition: keycloak.enabled

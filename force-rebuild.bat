@@ -1,0 +1,29 @@
+@echo off
+echo Force rebuilding workout backend...
+
+echo Stopping containers...
+docker-compose down
+
+echo Removing old images...
+docker rmi workout-backend_workout-backend --force
+
+echo Building application...
+mvn clean package -DskipTests
+
+echo Building Docker image with --no-cache...
+docker-compose build --no-cache
+
+echo Starting containers...
+docker-compose up -d
+
+echo Waiting for services to be ready...
+timeout /t 60 /nobreak
+
+echo Testing health endpoint...
+curl -v http://localhost:8080/health
+
+echo Testing JSON endpoint...
+curl -X POST http://localhost:8080/test-json -H "Content-Type: application/json" -d "{\"test\":\"data\"}"
+
+echo Done!
+pause

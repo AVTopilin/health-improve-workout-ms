@@ -29,8 +29,8 @@ spring:
 logging:
   level:
     root: INFO
-    com.workout: INFO
-    org.springframework.security: INFO
+    com.workout: DEBUG
+    org.springframework.security: WARN
 
 # MinIO Configuration
 minio:

@@ -3,7 +3,7 @@ echo Создание тестовых данных для API...
 echo.
 echo 1. Создание пользователя (автоматически в dev режиме):
 echo    - Пользователь создается автоматически при первом запросе
-echo    - Keycloak ID: dev-user
+echo    - Keycloak ID: testuser
 echo    - Email: dev@example.com
 echo.
 echo 2. Создание тренировки:

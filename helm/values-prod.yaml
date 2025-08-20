@@ -1,0 +1,117 @@
+# Production values for workout-backend
+# Используйте этот файл для продакшена: helm install -f values-prod.yaml
+
+replicaCount: 3
+
+image:
+  repository: your-registry/workout-backend
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: workout.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: workout-tls
+      hosts:
+        - workout.yourdomain.com
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
+# Database configuration
+database:
+  enabled: true
+  type: postgresql
+  host: your-prod-postgresql-host
+  port: 5432
+  name: workout_db
+  username: workout_user
+  password: "CHANGE_ME_TO_SECURE_PASSWORD"
+  existingSecret: "workout-db-secret"
+
+# MinIO configuration
+minio:
+  enabled: true
+  host: your-prod-minio-host
+  port: 9000
+  accessKey: "CHANGE_ME"
+  secretKey: "CHANGE_ME_TO_SECURE_KEY"
+  bucket: workout-media
+  existingSecret: "workout-minio-secret"
+
+# Keycloak configuration
+keycloak:
+  enabled: true
+  host: your-prod-keycloak-host
+  port: 8080
+  realm: workout
+  clientId: workout-backend
+  existingSecret: "workout-keycloak-secret"
+
+# Application specific configuration
+app:
+  server:
+    port: 8080
+  logging:
+    level: WARN
+  profiles:
+    active: prod
+  cors:
+    allowedOrigins: "https://workout.yourdomain.com"
+    allowedMethods: "GET,POST,PUT,DELETE,OPTIONS"
+    allowedHeaders: "Authorization,Content-Type"
+
+# Security
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Pod security
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Node affinity for production
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/prod
+          operator: In
+          values:
+          - "true"
+
+# Tolerations for production nodes
+tolerations:
+- key: "node-role.kubernetes.io/prod"
+  operator: "Equal"
+  value: "true"
+  effect: "NoSchedule"

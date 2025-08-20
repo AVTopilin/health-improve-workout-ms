@@ -1,0 +1,41 @@
+# MinIO configuration
+image:
+  repository: minio/minio
+  tag: "RELEASE.2024-01-16T16-07-38Z"
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+service:
+  type: ClusterIP
+  port: 9000
+  consolePort: 9001
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+env:
+  MINIO_ROOT_USER: minioadmin
+  MINIO_ROOT_PASSWORD: minioadmin
+
+securityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+
+volumePermissions:
+  enabled: true
+  securityContext:
+    runAsUser: 0
+
+# Create default bucket
+buckets:
+  - name: workout-media
+    policy: public

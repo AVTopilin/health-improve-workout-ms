@@ -19,7 +19,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                // Разрешаем доступ к health endpoints без аутентификации
+                .requestMatchers("/health", "/actuator/health", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                // Разрешаем доступ к корневому endpoint
+                .requestMatchers("/").permitAll()
+                // Разрешаем доступ к тестовому endpoint без аутентификации
+                .requestMatchers("/test-json").permitAll()
+                // В prod профиле API endpoints требуют JWT аутентификацию
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
@@ -30,17 +36,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Profile({"dev", "local"})
+    @Profile({"dev", "local", "debug"})
     public SecurityFilterChain developmentFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/health", "/actuator/health", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/").permitAll()
+                .requestMatchers("/test-json", "/test-workout-dto", "/test-raw-json").permitAll()
+                .requestMatchers("/api/**").permitAll()
                 .anyRequest().permitAll()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
             );
+        // Полностью отключаем JWT аутентификацию для dev/local/debug профилей
+        // НЕ добавляем oauth2ResourceServer
 
         return http.build();
     }

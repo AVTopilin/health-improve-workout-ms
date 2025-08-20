@@ -1,0 +1,45 @@
+# Keycloak configuration
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "23.0.0"
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+env:
+  KEYCLOAK_ADMIN: admin
+  KEYCLOAK_ADMIN_PASSWORD: admin
+  KC_DB: postgresql
+  KC_DB_URL: jdbc:postgresql://postgresql:5432/keycloak
+  KC_DB_USERNAME: keycloak_user
+  KC_DB_PASSWORD: keycloak_password
+
+securityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+
+volumePermissions:
+  enabled: true
+  securityContext:
+    runAsUser: 0
+
+# Keycloak configuration
+keycloak:
+  realm: workout
+  clientId: workout-backend
+  clientSecret: workout-backend-secret

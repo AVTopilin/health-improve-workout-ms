@@ -32,7 +32,7 @@ springdoc:
 
 logging:
   level:
-    root: WARN
-    com.workout: INFO
-    org.springframework.security: INFO
-    org.hibernate.SQL: WARN
+    root: INFO
+    com.workout: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: DEBUG

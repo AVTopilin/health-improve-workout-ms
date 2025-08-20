@@ -20,5 +20,7 @@ public class MuscleGroupDto {
     @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Color code must be a valid HEX color")
     private String colorCode;
     
+    private Boolean isActive;
+    
     private Long exerciseTemplateCount; // Количество упражнений в этой группе
 }

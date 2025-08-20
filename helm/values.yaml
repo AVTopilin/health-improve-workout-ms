@@ -1,0 +1,103 @@
+# Default values for workout-backend
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: workout-backend
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Database configuration
+database:
+  enabled: true
+  type: postgresql
+  host: postgresql
+  port: 5432
+  name: workout_db
+  username: workout_user
+  password: workout_password
+  existingSecret: ""
+
+# MinIO configuration
+minio:
+  enabled: true
+  host: minio
+  port: 9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: workout-media
+  existingSecret: ""
+
+# Keycloak configuration
+keycloak:
+  enabled: true
+  host: keycloak
+  port: 8080
+  realm: workout
+  clientId: workout-backend
+  existingSecret: ""
+
+# Application specific configuration
+app:
+  server:
+    port: 8080
+  logging:
+    level: INFO
+  profiles:
+    active: prod
+  cors:
+    allowedOrigins: "*"
+    allowedMethods: "*"
+    allowedHeaders: "*"

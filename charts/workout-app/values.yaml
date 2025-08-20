@@ -1,0 +1,193 @@
+# Default values for workout-app
+# This is a YAML-formatted file.
+
+# Application configuration
+app:
+  name: workout-app
+  image:
+    repository: workout-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 2
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  # JVM options
+  javaOpts: "-Xmx512m -Xms256m"
+  
+  # Health check configuration
+  healthCheck:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: workout.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Database configuration
+database:
+  enabled: true
+  type: postgresql
+  host: postgresql
+  port: 5432
+  name: workout_db
+  username: workout_user
+  password: workout_password
+  
+  # PostgreSQL deployment
+  postgresql:
+    enabled: true
+    image:
+      repository: postgres
+      tag: "15-alpine"
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Keycloak configuration
+keycloak:
+  enabled: true
+  image:
+    repository: quay.io/keycloak/keycloak
+    tag: "23.0"
+  adminUser: admin
+  adminPassword: admin123
+  
+  # Keycloak deployment
+  deployment:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 1Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+# MinIO configuration
+minio:
+  enabled: true
+  image:
+    repository: minio/minio
+    tag: "RELEASE.2024-01-16T16-07-38Z"
+  
+  # MinIO deployment
+  deployment:
+    enabled: true
+    mode: standalone
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Redis for caching (optional)
+redis:
+  enabled: false
+  image:
+    repository: redis
+    tag: "7-alpine"
+  persistence:
+    enabled: false
+    size: 1Gi
+
+# Monitoring and logging
+monitoring:
+  enabled: false
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false
+
+# Security
+security:
+  # JWT configuration
+  jwt:
+    issuer: http://keycloak:8080/realms/workout
+    audience: workout-app
+  
+  # Network policies
+  networkPolicy:
+    enabled: false
+  
+  # Pod security standards
+  podSecurityContext:
+    fsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+  
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
+
+# Environment-specific overrides
+environment:
+  # Development
+  dev:
+    replicaCount: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  
+  # Production
+  prod:
+    replicaCount: 3
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    ingress:
+      enabled: true
+    monitoring:
+      enabled: true

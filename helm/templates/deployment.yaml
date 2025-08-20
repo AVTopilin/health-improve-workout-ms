@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workout-backend.fullname" . }}
+  labels:
+    {{- include "workout-backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workout-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "workout-backend.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workout-backend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.app.profiles.active }}
+            - name: SERVER_PORT
+              value: "{{ .Values.app.server.port }}"
+            - name: LOGGING_LEVEL_ROOT
+              value: {{ .Values.app.logging.level }}
+            
+            # Database configuration
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.database.username }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.database.password }}
+            
+            # MinIO configuration
+            - name: MINIO_ENDPOINT
+              value: "http://{{ .Values.minio.host }}:{{ .Values.minio.port }}"
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.minio.accessKey }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.minio.secretKey }}
+            - name: MINIO_BUCKET
+              value: {{ .Values.minio.bucket }}
+            
+            # Keycloak configuration
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              value: "http://{{ .Values.keycloak.host }}:{{ .Values.keycloak.port }}/realms/{{ .Values.keycloak.realm }}"
+            
+            # CORS configuration
+            - name: CORS_ALLOWED_ORIGINS
+              value: {{ .Values.app.cors.allowedOrigins | quote }}
+            - name: CORS_ALLOWED_METHODS
+              value: {{ .Values.app.cors.allowedMethods | quote }}
+            - name: CORS_ALLOWED_HEADERS
+              value: {{ .Values.app.cors.allowedHeaders | quote }}
+          {{- if .Values.database.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.database.existingSecret }}
+          {{- end }}
+          {{- if .Values.minio.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.minio.existingSecret }}
+          {{- end }}
+          {{- if .Values.keycloak.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.keycloak.existingSecret }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

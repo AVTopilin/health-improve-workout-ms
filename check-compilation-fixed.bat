@@ -1,24 +1,38 @@
 @echo off
-echo Проверка компиляции после исправления сигнатур методов...
+echo Checking compilation after exception fixes...
 echo.
-echo 1. Откройте проект workout_backend_new в IntelliJ IDEA
-echo 2. Дождитесь импорта Maven проекта
-echo 3. В панели Maven (справа) выполните:
-echo    - clean
-echo    - compile
+
+echo Cleaning project...
+mvn clean
+
 echo.
-echo Или используйте Build -> Build Project (Ctrl+F9)
-echo.
-echo Что мы исправили:
-echo - Привели сигнатуры методов контроллеров в соответствие с сервисами
-echo - Убрали лишние параметры userId из вызовов сервисов
-echo - Добавили TODO комментарии для будущих проверок безопасности
-echo.
-echo Контроллеры, которые были исправлены:
-echo - WorkoutSessionController - исправлены сигнатуры методов
-echo - ProgressionController - исправлены сигнатуры методов
-echo - ExerciseSetController - исправлены сигнатуры методов
-echo.
-echo Теперь все контроллеры должны компилироваться без ошибок!
-echo.
+echo Compiling project...
+mvn compile
+
+if %errorlevel% equ 0 (
+    echo.
+    echo ========================================
+    echo ✅ Compilation successful!
+    echo ========================================
+    echo.
+    echo All RuntimeException have been replaced with proper exceptions:
+    echo - NotFoundException for "not found" cases
+    echo - AccessDeniedException for "access denied" cases
+    echo.
+    echo Next steps:
+    echo 1. Run: mvn package -DskipTests
+    echo 2. Run: docker-compose build backend
+    echo 3. Run: docker-compose up -d
+    echo 4. Test the API with: debug-workout-exercises.bat
+    echo.
+) else (
+    echo.
+    echo ========================================
+    echo ❌ Compilation failed!
+    echo ========================================
+    echo.
+    echo Check the errors above and fix them.
+    echo.
+)
+
 pause

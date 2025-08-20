@@ -20,18 +20,7 @@ public class EquipmentDto {
     @NotNull(message = "Equipment type is required")
     private String type;
     
-    private Long exerciseTemplateCount; // Количество упражнений с этим оборудованием
+    private Boolean isActive;
     
-    public enum EquipmentType {
-        DUMBBELLS,      // Гантели
-        BARBELL,        // Штанга
-        KETTLEBELL,     // Гиря
-        RESISTANCE_BAND, // Резиновая лента
-        BODYWEIGHT,     // Собственный вес
-        MACHINE,        // Тренажер
-        CABLE,          // Блочный тренажер
-        STABILITY_BALL, // Фитбол
-        MEDICINE_BALL,  // Медицинский мяч
-        OTHER           // Другое
-    }
+    private Long exerciseTemplateCount; // Количество упражнений с этим оборудованием
 }

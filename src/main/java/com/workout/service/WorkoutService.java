@@ -1,20 +1,26 @@
 package com.workout.service;
 
-import com.workout.dto.WorkoutDto;
 import com.workout.dto.ExerciseDto;
+import com.workout.dto.WorkoutDto;
 import com.workout.entity.Exercise;
 import com.workout.entity.ExerciseTemplate;
 import com.workout.entity.User;
 import com.workout.entity.Workout;
+import com.workout.exception.NotFoundException;
+import com.workout.exception.AccessDeniedException;
 import com.workout.repository.ExerciseRepository;
 import com.workout.repository.ExerciseTemplateRepository;
 import com.workout.repository.WorkoutRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkoutService {
@@ -32,10 +38,10 @@ public class WorkoutService {
     
     public WorkoutDto getWorkoutById(Long id, Long userId) {
         Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Workout not found"));
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
         
         if (!workout.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         return convertToDto(workout);
@@ -43,10 +49,43 @@ public class WorkoutService {
     
     @Transactional
     public WorkoutDto createWorkout(WorkoutDto workoutDto, User user) {
+        log.info("Creating workout with DTO: {}", workoutDto);
+        
         Workout workout = new Workout();
         workout.setName(workoutDto.getName());
         workout.setDescription(workoutDto.getDescription());
         workout.setUser(user);
+        
+        // Заполняем обязательные поля
+        if (workoutDto.getDayOfWeek() != null) {
+            workout.setDayOfWeek(workoutDto.getDayOfWeek());
+            log.info("Setting dayOfWeek from DTO: {}", workoutDto.getDayOfWeek());
+        } else {
+            // Устанавливаем значение по умолчанию
+            workout.setDayOfWeek(DayOfWeek.MONDAY);
+            log.info("Setting default dayOfWeek: {}", DayOfWeek.MONDAY);
+        }
+        
+        if (workoutDto.getWeeksCount() != null) {
+            workout.setWeeksCount(workoutDto.getWeeksCount());
+            log.info("Setting weeksCount from DTO: {}", workoutDto.getWeeksCount());
+        } else {
+            // Устанавливаем значение по умолчанию
+            workout.setWeeksCount(4);
+            log.info("Setting default weeksCount: {}", 4);
+        }
+        
+        if (workoutDto.getStartDate() != null) {
+            workout.setStartDate(workoutDto.getStartDate());
+            log.info("Setting startDate from DTO: {}", workoutDto.getStartDate());
+        } else {
+            // Устанавливаем значение по умолчанию - текущая дата
+            workout.setStartDate(LocalDate.now());
+            log.info("Setting default startDate: {}", LocalDate.now());
+        }
+        
+        log.info("Workout entity before save: dayOfWeek={}, weeksCount={}, startDate={}", 
+                workout.getDayOfWeek(), workout.getWeeksCount(), workout.getStartDate());
         
         Workout savedWorkout = workoutRepository.save(workout);
         
@@ -64,15 +103,39 @@ public class WorkoutService {
     
     @Transactional
     public WorkoutDto updateWorkout(Long id, WorkoutDto workoutDto, Long userId) {
+        log.info("Updating workout with id: {}, DTO: {}", id, workoutDto);
+        
         Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Workout not found"));
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
         
         if (!workout.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
+        
+        log.info("Current workout state: dayOfWeek={}, weeksCount={}, startDate={}", 
+                workout.getDayOfWeek(), workout.getWeeksCount(), workout.getStartDate());
         
         workout.setName(workoutDto.getName());
         workout.setDescription(workoutDto.getDescription());
+        
+        // Обновляем обязательные поля
+        if (workoutDto.getDayOfWeek() != null) {
+            workout.setDayOfWeek(workoutDto.getDayOfWeek());
+            log.info("Updating dayOfWeek to: {}", workoutDto.getDayOfWeek());
+        }
+        
+        if (workoutDto.getWeeksCount() != null) {
+            workout.setWeeksCount(workoutDto.getWeeksCount());
+            log.info("Updating weeksCount to: {}", workoutDto.getWeeksCount());
+        }
+        
+        if (workoutDto.getStartDate() != null) {
+            workout.setStartDate(workoutDto.getStartDate());
+            log.info("Updating startDate to: {}", workoutDto.getStartDate());
+        }
+        
+        log.info("Workout entity after update: dayOfWeek={}, weeksCount={}, startDate={}", 
+                workout.getDayOfWeek(), workout.getWeeksCount(), workout.getStartDate());
         
         // Удаляем старые упражнения
         exerciseRepository.deleteByWorkoutId(id);
@@ -93,10 +156,10 @@ public class WorkoutService {
     
     public void deleteWorkout(Long id, Long userId) {
         Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Workout not found"));
+                .orElseThrow(() -> new NotFoundException("Workout not found"));
         
         if (!workout.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         workoutRepository.deleteById(id);
@@ -107,6 +170,9 @@ public class WorkoutService {
         dto.setId(workout.getId());
         dto.setName(workout.getName());
         dto.setDescription(workout.getDescription());
+        dto.setDayOfWeek(workout.getDayOfWeek());
+        dto.setWeeksCount(workout.getWeeksCount());
+        dto.setStartDate(workout.getStartDate());
         dto.setCreatedAt(workout.getCreatedAt());
         dto.setUpdatedAt(workout.getUpdatedAt());
         
@@ -147,7 +213,7 @@ public class WorkoutService {
         
         // Получаем шаблон упражнения
         ExerciseTemplate template = exerciseTemplateRepository.findById(dto.getExerciseTemplateId())
-                .orElseThrow(() -> new RuntimeException("Exercise template not found"));
+                .orElseThrow(() -> new NotFoundException("Exercise template not found"));
         exercise.setExerciseTemplate(template);
         
         exercise.setSets(dto.getSets());
