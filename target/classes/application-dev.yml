@@ -10,7 +10,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none  # Временно отключаем валидацию, чтобы Liquibase создал таблицы
     show-sql: true
     properties:
       hibernate:
@@ -21,7 +21,13 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/workout-realm}
+          issuer-uri: http://localhost:8081/realms/workout-realm
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db-changelog-master.yaml
+    contexts: ${LIQUIBASE_CONTEXTS:}
+    default-schema: public
 
 # SpringDoc OpenAPI Configuration
 springdoc:

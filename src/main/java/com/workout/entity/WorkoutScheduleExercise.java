@@ -28,6 +28,10 @@ public class WorkoutScheduleExercise {
     @JoinColumn(name = "exercise_template_id", nullable = false)
     private ExerciseTemplate exerciseTemplate;
     
+    // Связь с конкретным упражнением из тренировки
+    @Column(name = "exercise_id")
+    private Long exerciseId;
+    
     // Рассчитанные параметры для этой недели (по прогрессии)
     @Column(name = "planned_weight", nullable = false)
     private Float plannedWeight;

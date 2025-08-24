@@ -71,6 +71,8 @@ public class ProgressionService {
         progression.setRepsIncrementType(progressionDto.getRepsIncrementType());
         progression.setSetsIncrementType(progressionDto.getSetsIncrementType());
         progression.setWeightIncrementValue(progressionDto.getWeightIncrementValue());
+        progression.setWeightInitialValue(progressionDto.getWeightInitialValue());
+        progression.setWeightFinalValue(progressionDto.getWeightFinalValue());
         progression.setRepsIncrementValue(progressionDto.getRepsIncrementValue());
         progression.setSetsIncrementValue(progressionDto.getSetsIncrementValue());
         progression.setRepsInitialValue(progressionDto.getRepsInitialValue());
@@ -103,6 +105,8 @@ public class ProgressionService {
         progression.setRepsIncrementType(progressionDto.getRepsIncrementType());
         progression.setSetsIncrementType(progressionDto.getSetsIncrementType());
         progression.setWeightIncrementValue(progressionDto.getWeightIncrementValue());
+        progression.setWeightInitialValue(progressionDto.getWeightInitialValue());
+        progression.setWeightFinalValue(progressionDto.getWeightFinalValue());
         progression.setRepsIncrementValue(progressionDto.getRepsIncrementValue());
         progression.setSetsIncrementValue(progressionDto.getSetsIncrementValue());
         progression.setRepsInitialValue(progressionDto.getRepsInitialValue());
@@ -177,7 +181,9 @@ public class ProgressionService {
         dto.setRepsIncrementValue(progression.getRepsIncrementValue());
         dto.setSetsIncrementValue(progression.getSetsIncrementValue());
         
-        // Начальные и конечные значения
+        // Начальные и конечные значения для циклов
+        dto.setWeightInitialValue(progression.getWeightInitialValue());
+        dto.setWeightFinalValue(progression.getWeightFinalValue());
         dto.setRepsInitialValue(progression.getRepsInitialValue());
         dto.setRepsFinalValue(progression.getRepsFinalValue());
         dto.setSetsInitialValue(progression.getSetsInitialValue());

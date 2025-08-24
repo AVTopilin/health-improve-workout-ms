@@ -56,6 +56,12 @@ public class ProgressionDto {
     private Integer setsIncrementValue;
     
     // Начальные и конечные значения для циклов
+    @Min(value = 0, message = "Weight initial value must be non-negative")
+    private Float weightInitialValue;
+    
+    @Min(value = 0, message = "Weight final value must be non-negative")
+    private Float weightFinalValue;
+    
     @Min(value = 1, message = "Reps initial value must be at least 1")
     private Integer repsInitialValue;
     

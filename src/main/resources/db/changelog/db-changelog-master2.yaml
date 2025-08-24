@@ -1,0 +1,63 @@
+databaseChangeLog:
+- changeSet:
+    id: 001
+    author: workout-app
+    comment: Создание базовых таблиц
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/001-tables.sql
+        relativeToChangelogFile: false
+
+- changeSet:
+    id: 002
+    author: workout-app
+    comment: Создание справочных таблиц
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/002-lookup-tables.sql
+        relativeToChangelogFile: false
+
+- changeSet:
+    id: 003
+    author: workout-app
+    comment: Создание таблиц прогрессии
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/003-progressions-schedules.sql
+        relativeToChangelogFile: false
+
+- changeSet:
+    id: 004
+    author: workout-app
+    comment: Создание индексов
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/004-indexes.sql
+        relativeToChangelogFile: false
+
+- changeSet:
+    id: 005
+    author: workout-app
+    comment: Создание триггеров
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/005-triggers.sql
+        relativeToChangelogFile: false
+
+- changeSet:
+    id: 006
+    author: workout-app
+    comment: Добавление ограничений
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/006-constraints.sql
+        relativeToChangelogFile: false
+
+- changeSet:
+    id: 007
+    author: workout-app
+    comment: Вставка тестовых данных
+    changes:
+    - sqlFile:
+        path: db/changelog/sql/007-test-data.sql
+        relativeToChangelogFile: false

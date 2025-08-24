@@ -73,6 +73,12 @@ public class Progression {
     private Integer setsIncrementValue;
     
     // Начальные и конечные значения для циклов
+    @Column(name = "weight_initial_value")
+    private Float weightInitialValue;
+    
+    @Column(name = "weight_final_value")
+    private Float weightFinalValue;
+    
     @Column(name = "reps_initial_value")
     private Integer repsInitialValue;
     

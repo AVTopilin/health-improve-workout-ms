@@ -13,12 +13,18 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
+  
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db-changelog-master.yaml
+    contexts: ${LIQUIBASE_CONTEXTS:}
+    default-schema: public
   
   security:
     oauth2:

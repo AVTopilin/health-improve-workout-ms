@@ -44,11 +44,12 @@ public class SecurityConfig {
                 .requestMatchers("/health", "/actuator/health", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/test-json", "/test-workout-dto", "/test-raw-json").permitAll()
-                .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/api/**").authenticated() // Требуем аутентификацию для API
                 .anyRequest().permitAll()
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
             );
-        // Полностью отключаем JWT аутентификацию для dev/local/debug профилей
-        // НЕ добавляем oauth2ResourceServer
 
         return http.build();
     }

@@ -19,6 +19,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Map;
+import com.workout.dto.ProgressionDto;
+import com.workout.entity.Progression;
 
 @Slf4j
 @Service
@@ -28,6 +32,9 @@ public class WorkoutService {
     private final WorkoutRepository workoutRepository;
     private final ExerciseRepository exerciseRepository;
     private final ExerciseTemplateRepository exerciseTemplateRepository;
+    private final ProgressionService progressionService;
+    
+
     
     public List<WorkoutDto> getWorkoutsByUserId(Long userId) {
         List<Workout> workouts = workoutRepository.findByUserId(userId);
@@ -137,17 +144,9 @@ public class WorkoutService {
         log.info("Workout entity after update: dayOfWeek={}, weeksCount={}, startDate={}", 
                 workout.getDayOfWeek(), workout.getWeeksCount(), workout.getStartDate());
         
-        // Удаляем старые упражнения
-        exerciseRepository.deleteByWorkoutId(id);
-        
-        // Добавляем новые упражнения
+        // Обновляем упражнения с сохранением прогрессии
         if (workoutDto.getExercises() != null) {
-            List<Exercise> exercises = workoutDto.getExercises().stream()
-                    .map(exDto -> convertToExercise(exDto, workout))
-                    .collect(Collectors.toList());
-            
-            exerciseRepository.saveAll(exercises);
-            workout.setExercises(exercises);
+            updateExercises(workoutDto.getExercises(), workout);
         }
         
         Workout savedWorkout = workoutRepository.save(workout);
@@ -204,6 +203,11 @@ public class WorkoutService {
         dto.setRestTime(exercise.getRestTime());
         dto.setExerciseOrder(exercise.getExerciseOrder());
         dto.setNotes(exercise.getNotes());
+        
+        // Загружаем прогрессию для упражнения
+        ProgressionDto progression = progressionService.getProgressionByExerciseId(exercise.getId());
+        dto.setProgression(progression);
+        
         return dto;
     }
     
@@ -223,5 +227,117 @@ public class WorkoutService {
         exercise.setExerciseOrder(dto.getExerciseOrder());
         exercise.setNotes(dto.getNotes());
         return exercise;
+    }
+    
+    /**
+     * Обновляет упражнения в тренировке с сохранением прогрессии
+     */
+    private void updateExercises(List<ExerciseDto> exerciseDtos, Workout workout) {
+        log.info("Updating exercises for workout: {}", workout.getId());
+        
+        // Получаем существующие упражнения
+        List<Exercise> existingExercises = exerciseRepository.findByWorkoutId(workout.getId());
+        Map<Long, Exercise> existingExercisesMap = existingExercises.stream()
+                .collect(Collectors.toMap(Exercise::getId, e -> e));
+        
+        List<Exercise> updatedExercises = new ArrayList<>();
+        
+        for (ExerciseDto dto : exerciseDtos) {
+            if (dto.getId() != null && existingExercisesMap.containsKey(dto.getId())) {
+                // Обновляем существующее упражнение
+                Exercise existingExercise = existingExercisesMap.get(dto.getId());
+                updateExistingExercise(existingExercise, dto);
+                updatedExercises.add(existingExercise);
+                existingExercisesMap.remove(dto.getId()); // Убираем из списка существующих
+                log.debug("Updated existing exercise: {}", dto.getId());
+            } else {
+                // Создаем новое упражнение
+                Exercise newExercise = convertToExercise(dto, workout);
+                updatedExercises.add(newExercise);
+                log.debug("Created new exercise for template: {}", dto.getExerciseTemplateId());
+            }
+        }
+        
+        // Удаляем упражнения, которых больше нет в DTO
+        for (Exercise exerciseToDelete : existingExercisesMap.values()) {
+            exerciseRepository.deleteById(exerciseToDelete.getId());
+            log.debug("Deleted exercise: {}", exerciseToDelete.getId());
+        }
+        
+        // Сохраняем обновленные упражнения
+        List<Exercise> savedExercises = exerciseRepository.saveAll(updatedExercises);
+        workout.setExercises(savedExercises);
+        
+        log.info("Successfully updated exercises. Total: {}, Updated: {}, Created: {}, Deleted: {}", 
+                exerciseDtos.size(), 
+                exerciseDtos.stream().filter(dto -> dto.getId() != null).count(),
+                exerciseDtos.stream().filter(dto -> dto.getId() == null).count(),
+                existingExercisesMap.size());
+    }
+    
+    /**
+     * Обновляет существующее упражнение
+     */
+    private void updateExistingExercise(Exercise exercise, ExerciseDto dto) {
+        // Получаем шаблон упражнения
+        ExerciseTemplate template = exerciseTemplateRepository.findById(dto.getExerciseTemplateId())
+                .orElseThrow(() -> new NotFoundException("Exercise template not found"));
+        
+        exercise.setExerciseTemplate(template);
+        exercise.setSets(dto.getSets());
+        exercise.setReps(dto.getReps());
+        exercise.setWeight(dto.getWeight());
+        exercise.setRestTime(dto.getRestTime());
+        exercise.setExerciseOrder(dto.getExerciseOrder());
+        exercise.setNotes(dto.getNotes());
+        
+        // Обновляем прогрессию
+        updateExerciseProgression(exercise, dto);
+    }
+    
+    /**
+     * Обновляет прогрессию для упражнения
+     */
+    private void updateExerciseProgression(Exercise exercise, ExerciseDto dto) {
+        try {
+            // Если в DTO есть прогрессия, используем её
+            if (dto.getProgression() != null) {
+                ProgressionDto progressionDto = dto.getProgression();
+                progressionDto.setUserId(exercise.getWorkout().getUser().getId());
+                progressionDto.setExerciseId(exercise.getId());
+                
+                // Проверяем, есть ли уже прогрессия для этого упражнения
+                ProgressionDto existingProgression = progressionService.getProgressionByExerciseId(exercise.getId());
+                if (existingProgression == null) {
+                    // Создаем новую прогрессию
+                    progressionService.createProgression(progressionDto);
+                    log.debug("Created new progression for exercise: {} with settings: {}", 
+                            exercise.getId(), progressionDto);
+                } else {
+                    // Обновляем существующую прогрессию
+                    progressionService.updateProgression(existingProgression.getId(), progressionDto);
+                    log.debug("Updated existing progression for exercise: {} with settings: {}", 
+                            exercise.getId(), progressionDto);
+                }
+            } else {
+                // Если прогрессии нет в DTO, создаем с дефолтными значениями
+                ProgressionDto existingProgression = progressionService.getProgressionByExerciseId(exercise.getId());
+                if (existingProgression == null) {
+                    ProgressionDto progressionDto = new ProgressionDto();
+                    progressionDto.setUserId(exercise.getWorkout().getUser().getId());
+                    progressionDto.setExerciseId(exercise.getId());
+                    progressionDto.setWeightProgressionEnabled(true);
+                    progressionDto.setWeightPeriodicity(Progression.PeriodicityType.EVERY_WORKOUT);
+                    progressionDto.setWeightIncrementType(Progression.IncrementType.INCREMENT);
+                    progressionDto.setWeightIncrementValue(2.5f);
+                    progressionDto.setWeightInitialValue(0.0f);
+                    progressionDto.setWeightFinalValue(100.0f);
+                    progressionService.createProgression(progressionDto);
+                    log.debug("Created default progression for exercise: {}", exercise.getId());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to update progression for exercise {}: {}", exercise.getId(), e.getMessage());
+        }
     }
 }
