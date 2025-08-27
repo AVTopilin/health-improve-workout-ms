@@ -1,0 +1,15 @@
+# values.yaml для разработки
+auth:
+  rootUser: minioadmin
+  rootPassword: "minioadmin"  # Пароль для доступа к MinIO
+
+mode: standalone  # Режим: standalone или distributed
+
+service:
+  type: NodePort  # Для доступа через NodePort
+
+
+persistence:
+  enabled: true    # Включить постоянное хранилище
+  size: 10Gi       # Разъем хранилища на pod
+  storageClass: "nfs-csi"  # Указать свой StorageClass:cite[2]

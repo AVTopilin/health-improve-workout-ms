@@ -3,10 +3,12 @@ C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\entity\Workou
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\controller\MuscleGroupController.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\controller\BaseController.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\ScheduleGenerationRequestDto.java
+C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\SetExecutionDto.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\service\ProgressionService.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\config\SecurityConfig.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\EquipmentDto.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\exception\NotFoundException.java
+C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\repository\SetExecutionRepository.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\entity\Workout.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\repository\MuscleGroupRepository.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\controller\WorkoutController.java
@@ -43,6 +45,7 @@ C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\config\Flexib
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\config\JacksonConfig.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\controller\WorkoutScheduleController.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\controller\ProgressionController.java
+C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\SetExecutionUpdateDto.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\config\SwaggerConfig.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\entity\Exercise.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\repository\UserRepository.java
@@ -53,8 +56,10 @@ C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\service\Exerc
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\ExerciseTemplateDto.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\service\MinioService.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\service\ExerciseTemplateService.java
+C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\WorkoutScheduleExerciseUpdateDto.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\controller\GlobalExceptionHandler.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\entity\ExerciseTemplate.java
+C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\dto\WorkoutScheduleStatusUpdateDto.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\repository\ExerciseRepository.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\service\WorkoutScheduleGenerationService.java
 C:\Dev\workout\health-improve-workout-ms\src\main\java\com\workout\repository\WorkoutScheduleRepository.java

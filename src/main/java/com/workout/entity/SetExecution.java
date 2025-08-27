@@ -27,6 +27,13 @@ public class SetExecution {
     @Column(name = "set_number", nullable = false)
     private Integer setNumber;
     
+    // Планируемые значения для подхода
+    @Column(name = "planned_weight")
+    private Float plannedWeight;
+    
+    @Column(name = "planned_reps")
+    private Integer plannedReps;
+    
     // Фактические выполненные значения
     @Column(name = "actual_weight")
     private Float actualWeight;
@@ -49,6 +56,11 @@ public class SetExecution {
     @Column(columnDefinition = "TEXT")
     private String notes;
     
+    // Статус выполнения подхода
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private SetStatus status = SetStatus.PLANNED;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -64,5 +76,13 @@ public class SetExecution {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    
+    public enum SetStatus {
+        PLANNED,        // Запланировано
+        IN_PROGRESS,    // В процессе выполнения
+        COMPLETED,      // Завершено
+        SKIPPED,        // Пропущено
+        FAILED          // Не удалось выполнить
     }
 }

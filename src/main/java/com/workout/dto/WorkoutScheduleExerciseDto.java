@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DTO для упражнений в расписании тренировок
@@ -58,6 +60,9 @@ public class WorkoutScheduleExerciseDto {
     private Integer actualSets;
     private Integer actualRestTime;
     
+    // Подходы упражнения
+    private List<SetExecutionDto> setExecutions;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -103,6 +108,13 @@ public class WorkoutScheduleExerciseDto {
             if (exercise.getExerciseTemplate().getEquipment() != null) {
                 dto.setEquipmentName(exercise.getExerciseTemplate().getEquipment().getName());
             }
+        }
+        
+        // Загружаем подходы упражнения
+        if (exercise.getSetExecutions() != null) {
+            dto.setSetExecutions(exercise.getSetExecutions().stream()
+                    .map(SetExecutionDto::fromEntity)
+                    .collect(Collectors.toList()));
         }
         
         return dto;

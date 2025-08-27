@@ -4,6 +4,10 @@ import com.workout.dto.WorkoutDto;
 import com.workout.dto.WorkoutScheduleDto;
 import com.workout.dto.WorkoutScheduleExerciseDto;
 import com.workout.dto.ScheduleGenerationRequestDto;
+import com.workout.dto.WorkoutScheduleStatusUpdateDto;
+import com.workout.dto.WorkoutScheduleExerciseUpdateDto;
+import com.workout.dto.SetExecutionDto;
+import com.workout.dto.SetExecutionUpdateDto;
 import com.workout.entity.User;
 import com.workout.entity.WorkoutSchedule;
 import com.workout.service.UserService;
@@ -21,6 +25,12 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.workout.entity.Workout;
+import com.workout.entity.WorkoutScheduleExercise;
+import com.workout.entity.ExerciseTemplate;
+import com.workout.repository.WorkoutRepository;
+import com.workout.repository.ExerciseTemplateRepository;
+import com.workout.entity.SetExecution;
 
 /**
  * Контроллер для управления расписанием тренировок
@@ -34,16 +44,22 @@ public class WorkoutScheduleController extends BaseController {
     private final WorkoutScheduleService workoutScheduleService;
     private final WorkoutScheduleGenerationService scheduleGenerationService;
     private final WorkoutService workoutService;
+    private final WorkoutRepository workoutRepository;
+    private final ExerciseTemplateRepository exerciseTemplateRepository;
     
     public WorkoutScheduleController(
             WorkoutScheduleService workoutScheduleService,
             WorkoutScheduleGenerationService scheduleGenerationService,
             WorkoutService workoutService,
-            UserService userService) {
+            UserService userService,
+            WorkoutRepository workoutRepository,
+            ExerciseTemplateRepository exerciseTemplateRepository) {
         super(userService);
         this.workoutScheduleService = workoutScheduleService;
         this.scheduleGenerationService = scheduleGenerationService;
         this.workoutService = workoutService;
+        this.workoutRepository = workoutRepository;
+        this.exerciseTemplateRepository = exerciseTemplateRepository;
     }
     
     /**
@@ -157,8 +173,31 @@ public class WorkoutScheduleController extends BaseController {
                 .map(dto -> {
                     WorkoutSchedule schedule = dto.toEntity();
                     schedule.setUser(user);
-                    // TODO: Получить Workout по ID
-                    // schedule.setWorkout(workout);
+                    
+                    // Получаем Workout по ID
+                    WorkoutDto workoutDto = workoutService.getWorkoutById(dto.getWorkoutId(), user.getId());
+                    Workout workout = workoutRepository.findById(workoutDto.getId())
+                            .orElseThrow(() -> new RuntimeException("Workout not found"));
+                    schedule.setWorkout(workout);
+                    
+                    // Устанавливаем упражнения
+                    if (dto.getExercises() != null) {
+                        List<WorkoutScheduleExercise> exercises = dto.getExercises().stream()
+                                .map(exerciseDto -> {
+                                    WorkoutScheduleExercise exercise = exerciseDto.toEntity();
+                                    exercise.setWorkoutSchedule(schedule);
+                                    
+                                    // Получаем ExerciseTemplate
+                                    ExerciseTemplate template = exerciseTemplateRepository.findById(exerciseDto.getExerciseTemplateId())
+                                            .orElseThrow(() -> new RuntimeException("Exercise template not found"));
+                                    exercise.setExerciseTemplate(template);
+                                    
+                                    return exercise;
+                                })
+                                .collect(Collectors.toList());
+                        schedule.setExercises(exercises);
+                    }
+                    
                     return schedule;
                 })
                 .collect(Collectors.toList());
@@ -175,19 +214,51 @@ public class WorkoutScheduleController extends BaseController {
     }
     
     /**
-     * Обновить статус расписания
+     * Обновить статус расписания тренировки
      */
     @PutMapping("/{id}/status")
     public ResponseEntity<WorkoutScheduleDto> updateScheduleStatus(
             @PathVariable Long id,
-            @RequestParam String status,
+            @Valid @RequestBody WorkoutScheduleStatusUpdateDto updateDto,
             @AuthenticationPrincipal Jwt jwt) {
         log.info("=== PUT /api/schedule/{}/status - UPDATE SCHEDULE STATUS ===", id);
-        log.info("Updating schedule {} status to: {}", id, status);
+        log.info("Updating schedule status to: {}", updateDto.getStatus());
         
         User user = getCurrentUser(jwt);
-        WorkoutSchedule updatedSchedule = workoutScheduleService.updateScheduleStatus(id, status, user.getId());
-        return ResponseEntity.ok(WorkoutScheduleDto.fromEntity(updatedSchedule));
+        WorkoutSchedule schedule = workoutScheduleService.updateScheduleStatus(id, user.getId(), updateDto);
+        return ResponseEntity.ok(WorkoutScheduleDto.fromEntity(schedule));
+    }
+    
+    /**
+     * Обновить статус упражнения в расписании
+     */
+    @PutMapping("/exercise/{exerciseId}/status")
+    public ResponseEntity<WorkoutScheduleExerciseDto> updateExerciseStatus(
+            @PathVariable Long exerciseId,
+            @Valid @RequestBody WorkoutScheduleExerciseUpdateDto updateDto,
+            @AuthenticationPrincipal Jwt jwt) {
+        log.info("=== PUT /api/schedule/exercise/{}/status - UPDATE EXERCISE STATUS ===", exerciseId);
+        log.info("Updating exercise status to: {}", updateDto.getStatus());
+        
+        User user = getCurrentUser(jwt);
+        WorkoutScheduleExercise exercise = workoutScheduleService.updateExerciseStatus(exerciseId, user.getId(), updateDto);
+        return ResponseEntity.ok(WorkoutScheduleExerciseDto.fromEntity(exercise));
+    }
+    
+    /**
+     * Обновить статус подхода
+     */
+    @PutMapping("/set/{setId}/status")
+    public ResponseEntity<SetExecutionDto> updateSetStatus(
+            @PathVariable Long setId,
+            @Valid @RequestBody SetExecutionUpdateDto updateDto,
+            @AuthenticationPrincipal Jwt jwt) {
+        log.info("=== PUT /api/schedule/set/{}/status - UPDATE SET STATUS ===", setId);
+        log.info("Updating set status to: {}", updateDto.getStatus());
+        
+        User user = getCurrentUser(jwt);
+        SetExecution setExecution = workoutScheduleService.updateSetStatus(setId, user.getId(), updateDto);
+        return ResponseEntity.ok(SetExecutionDto.fromEntity(setExecution));
     }
     
     /**

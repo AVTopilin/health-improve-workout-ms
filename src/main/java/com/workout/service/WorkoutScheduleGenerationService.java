@@ -11,6 +11,7 @@ import com.workout.repository.WorkoutRepository;
 import com.workout.repository.WorkoutScheduleRepository;
 import com.workout.repository.WorkoutScheduleExerciseRepository;
 import com.workout.repository.UserRepository;
+import com.workout.repository.SetExecutionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class WorkoutScheduleGenerationService {
     private final WorkoutScheduleRepository workoutScheduleRepository;
     private final WorkoutScheduleExerciseRepository workoutScheduleExerciseRepository;
     private final UserRepository userRepository;
+    private final SetExecutionRepository setExecutionRepository;
     
     /**
      * Генерирует расписание тренировок на основе существующей тренировки
@@ -109,6 +111,23 @@ public class WorkoutScheduleGenerationService {
                     exercise.setWorkoutSchedule(savedSchedule);
                 }
                 workoutScheduleExerciseRepository.saveAll(schedule.getExercises());
+                
+                // Создаем записи подходов для каждого упражнения
+                for (WorkoutScheduleExercise exercise : schedule.getExercises()) {
+                    createSetExecutions(exercise);
+                }
+                
+                // Сохраняем все созданные подходы в БД
+                List<SetExecution> allSetExecutions = new ArrayList<>();
+                for (WorkoutScheduleExercise exercise : schedule.getExercises()) {
+                    if (exercise.getSetExecutions() != null) {
+                        allSetExecutions.addAll(exercise.getSetExecutions());
+                    }
+                }
+                if (!allSetExecutions.isEmpty()) {
+                    setExecutionRepository.saveAll(allSetExecutions);
+                }
+                
                 savedSchedule.setExercises(schedule.getExercises());
             }
             
@@ -201,7 +220,12 @@ public class WorkoutScheduleGenerationService {
             scheduleExercise.setPlannedReps(reps);
             scheduleExercise.setPlannedSets(sets);
             scheduleExercise.setPlannedRestTime(restTime);
-            scheduleExercise.setExerciseOrder(i + 1);
+            scheduleExercise.setExerciseOrder(exerciseDto.getExerciseOrder() != null ? 
+                exerciseDto.getExerciseOrder() : (i + 1)); // Используем порядок из шаблона или i+1 как fallback
+            
+            log.info("Exercise order set to: {} (from template: {}, fallback: {})", 
+                    scheduleExercise.getExerciseOrder(), exerciseDto.getExerciseOrder(), (i + 1));
+            
             scheduleExercise.setStatus(WorkoutScheduleExercise.ExerciseStatus.PLANNED);
             scheduleExercise.setCreatedAt(LocalDateTime.now());
             scheduleExercise.setUpdatedAt(LocalDateTime.now());
@@ -409,5 +433,48 @@ public class WorkoutScheduleGenerationService {
             return 0; // Если начальное значение уже больше или равно финальному, нет недель
         }
         return (finalValue - startValue) / increment + 1;
+    }
+    
+    /**
+     * Создает записи SetExecution для каждого планируемого подхода в расписании
+     */
+    private void createSetExecutions(WorkoutScheduleExercise scheduleExercise) {
+        int plannedSets = scheduleExercise.getPlannedSets();
+        
+        // Создаем записи для каждого планируемого подхода
+        for (int setNumber = 1; setNumber <= plannedSets; setNumber++) {
+            SetExecution setExecution = new SetExecution();
+            setExecution.setWorkoutScheduleExercise(scheduleExercise);
+            setExecution.setSetNumber(setNumber);
+            
+            // Устанавливаем планируемые значения для подхода
+            setExecution.setPlannedWeight(scheduleExercise.getPlannedWeight());
+            setExecution.setPlannedReps(scheduleExercise.getPlannedReps());
+            
+            // Устанавливаем планируемые значения как начальные для фактических (пользователь может изменить)
+            setExecution.setActualWeight(scheduleExercise.getPlannedWeight());
+            setExecution.setActualReps(scheduleExercise.getPlannedReps());
+            setExecution.setRestTime(scheduleExercise.getPlannedRestTime());
+            
+            // Устанавливаем статус подхода
+            setExecution.setStatus(SetExecution.SetStatus.PLANNED);
+            
+            // Время выполнения (пока пустое, заполнится при выполнении)
+            setExecution.setStartTime(java.time.LocalTime.now());
+            
+            // Добавляем в список подходов упражнения
+            if (scheduleExercise.getSetExecutions() == null) {
+                scheduleExercise.setSetExecutions(new ArrayList<>());
+            }
+            scheduleExercise.getSetExecutions().add(setExecution);
+            
+            log.debug("Created set {}: planned={}kg x {} reps, actual={}kg x {} reps, status={}", 
+                    setNumber, 
+                    setExecution.getPlannedWeight(), setExecution.getPlannedReps(),
+                    setExecution.getActualWeight(), setExecution.getActualReps(),
+                    setExecution.getStatus());
+        }
+        
+        log.info("Created {} set executions for exercise: {}", plannedSets, scheduleExercise.getExerciseId());
     }
 }

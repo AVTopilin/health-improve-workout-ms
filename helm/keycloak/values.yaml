@@ -1,0 +1,24 @@
+# Включение и настройка PostgreSQL (встроенная база данных для разработки)
+postgresql:
+  enabled: true
+  auth:
+    username: "postgres"
+    password: "postgres"
+    database: "keycloak"
+
+# Настройка Keycloak
+service:
+  type: NodePort  # Для доступа через localhost :cite[3]
+
+auth:
+  adminUser: admin
+  adminPassword: admin  # Для разработки; в продакшене используйте секреты :cite[3]
+
+# Для разработки можно отключить строгую проверку hostname и HTTPS
+extraEnvVars:
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "false"
+  - name: KC_HTTP_ENABLED
+    value: "true"  # Разрешить HTTP для разработки :cite[8]

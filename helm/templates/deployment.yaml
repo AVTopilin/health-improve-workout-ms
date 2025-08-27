@@ -80,7 +80,9 @@ spec:
             # Keycloak configuration
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "http://{{ .Values.keycloak.host }}:{{ .Values.keycloak.port }}/realms/{{ .Values.keycloak.realm }}"
-            
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: "http://{{ .Values.keycloak.host }}:{{ .Values.keycloak.port }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs"
+
             # CORS configuration
             - name: CORS_ALLOWED_ORIGINS
               value: {{ .Values.app.cors.allowedOrigins | quote }}
